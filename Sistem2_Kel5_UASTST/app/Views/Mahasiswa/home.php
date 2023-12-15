@@ -68,7 +68,7 @@ function convertIndexTo4($param) {
         }
 
         button {
-            background-color: #ff5722;
+            background-color: #800000;
             color: #fff;
             border: none;
             padding: 10px 15px;
@@ -101,7 +101,7 @@ function convertIndexTo4($param) {
         }
 
         th {
-            background: linear-gradient(to right, #4cb8c4, #3cd3ad);
+            background: linear-gradient(to right, #1a7b95, #1a7b6d);
             color: #fff;
             font-size: 18px;
             border-bottom: 2px solid #000;
@@ -147,12 +147,12 @@ function convertIndexTo4($param) {
 
 <body>
     <div class="welcome-container">
-        <h2 style="color: black;">Welcome, <?= session('user_data')['nim'] ?>!</h2>
+        <h1 style="color: black;">Welcome, <?= session('user_data')['nama'] ?>!</h1>
     </div>
 
     <div style="display: flex; flex-direction: column; align-items: flex-end; padding: 10px;">
         <form action="/mahasiswa/logout" method="post">
-            <button type="submit" class="logout-button" style="color: black;">Logout</button>
+            <button type="submit" class="logout-button" style="color: white;">Logout</button>
         </form>
         
         <table>
@@ -166,20 +166,26 @@ function convertIndexTo4($param) {
 
             <?php
             function printRows() {
+                $modelMahasiswa = new \App\Models\ModelMahasiswa();
+
                 $totalScore = 0;
                 $totalSKS = 0;
 
-                for ($i = 1; $i <= 7; $i++) {
-                    $classCode = "CS" . $i . "01";
-                    $className = "Computer Science " . $i;
-                    $sks = rand(3, 5);
+                $nim = session('user_data')['nim'];
+                $mataKuliah = $modelMahasiswa->getMataKuliahByNIM($nim);
+
+                $i = 1;
+                foreach ($mataKuliah as $row) {
+                    $classCode = $row['kode_matkul'];
+                    $className = $row['nama'];
+                    $sks = $row['sks'];
                     $index = calculateIndex(rand(40, 100));
 
                     $totalScore += convertIndexTo4($index) * $sks;
                     $totalSKS += $sks;
                     
                     echo "<tr>";
-                    echo "<td>" . $i . "</td>";
+                    echo "<td>" . $i++ . "</td>";
                     echo "<td>" . $classCode . "</td>";
                     echo "<td>" . $className . "</td>";
                     echo "<td>" . $sks . "</td>";
@@ -192,6 +198,10 @@ function convertIndexTo4($param) {
 
             $IP = printRows();
 
+            $IPK = 0;
+            if (session('user_data')['ipk'] != null) {
+                $IPK = session('user_data')['ipk'];
+            }
 
             echo '<tr class="empty-row">';
             echo '<td colspan="5"></td>';
@@ -206,7 +216,7 @@ function convertIndexTo4($param) {
             echo '<tr class="ipk-row">';
             echo '<td colspan="2" style="background: #00bcd4;"></td>';
             echo '<td colspan="1" style="background: linear-gradient(to right, #ffc107, #ff8c00); font-weight: bold;">IPK</td>';
-            echo '<td colspan="2" style="background: linear-gradient(to right, #ffc107, #ff8c00); font-weight: bold;">' . number_format($IP, 2) . '</td>';
+            echo '<td colspan="2" style="background: linear-gradient(to right, #ffc107, #ff8c00); font-weight: bold;">' . number_format($IPK, 2) . '</td>';
             echo '</tr>';
             ?>
 
