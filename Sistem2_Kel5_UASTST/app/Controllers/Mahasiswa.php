@@ -44,31 +44,43 @@ class Mahasiswa extends Controller {
         $nim = $this->request->getPost('nim');
         $password = $this->request->getPost('password');
 
-        // Kode untuk verifikasi login, sesuai dengan sistem Anda
-        // Implementasi sederhana untuk keperluan uji coba
-        // Gantilah dengan metode otentikasi sesuai sistem sebenarnya
+        // Print nim and password in console
+        echo "NIM: " . $nim . "\n";
+        echo "Password: " . $password . "\n";
+        
+
+        // UNBLOCK WHEN DATABASE DONE
+        // $user = $this->modelMahasiswa->getNilaiByNIM($nim);
 
         // For testing purposes, using hardcoded credentials
-        $validNIM = 'mahasiswa';
-        $validPassword = 'password';
+        $validNIM = '18221000';
+        $validPassword = '$2a$10$.8ttdgn4FLkTAH6FJTScFuzZMDJ1NNizMpxhHeAn/gb5MDmIW68Ri';
 
-        if ($nim == $validNIM && $password == $validPassword) {
+        // UNBLOCK WHEN DATABASE DONE
+        // if ($user && password_verify($password, $user['password'])) {
+
+        $session = session();
+        if ($nim == $validNIM && password_verify($password, $validPassword)) {
             // Jika login sukses, set sesi dan redirect ke halaman home
             // Simpan data pengguna ke dalam sesi
             $userData = [
                 'nim' => $nim,
+                'nama' => 'Mahasiswa',
                 // Data pengguna lainnya...
             ];
 
-            $session = session();
             $session->set('logged_in', true);
             $session->set('user_data', $userData);
+            $session->remove('error');
 
             // Redirect ke halaman home
             return redirect()->to('mahasiswa/home');
-        } else {
-            // Jika login gagal, tampilkan pesan atau redirect ke halaman login
-            echo "Login gagal. Pastikan NIM dan password benar.";
+        } else if ($nim == null || $nim != $validNIM) {
+            $session->set('error', 'Wrong NIM!');
+            return redirect()->to('mahasiswa/login');
+        } else if ($password == null || !password_verify($password, $validPassword)) {
+            $session->set('error', 'Wrong Password!');
+            return redirect()->to('mahasiswa/login');
         }
     }
 

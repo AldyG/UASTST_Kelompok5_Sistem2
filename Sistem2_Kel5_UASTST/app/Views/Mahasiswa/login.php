@@ -85,6 +85,16 @@
 <body>
     <div class="login-box">
         <h2>Sistem Informasi Akademik</h2>
+        
+        <?php
+            // Display error message if set in session
+            $session = session();
+            if ($session->has('error')) {
+                echo '<p style="color: #FCE205;">' . $session->get('error') . '</p>';
+                $session->remove('error'); // Reset the session
+            }
+        ?>
+
         <form action="<?= site_url('mahasiswa/loginProcess') ?>" method="post">
             <label for="nim" style="color: #90ee90">NIM:</label>
             <input type="text" name="nim" required>
