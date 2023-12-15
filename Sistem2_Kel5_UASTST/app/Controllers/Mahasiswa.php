@@ -34,24 +34,46 @@ class Mahasiswa extends Controller {
 
     public function logout() {
         // Kode untuk logout
-        $this->session->unset_userdata('logged_in');
-        redirect('mahasiswa/login');
+        $session = session();
+        $session->remove('logged_in');
+        return redirect()->to('mahasiswa/login');
     }
 
-    public function login_process() {
-        $nim = $this->input->post('nim');
-        $password = $this->input->post('password');
+    public function loginProcess() {
+        // Retrieve user input from the login form
+        $nim = $this->request->getPost('nim');
+        $password = $this->request->getPost('password');
 
         // Kode untuk verifikasi login, sesuai dengan sistem Anda
-        // Contoh sederhana, perlu disesuaikan dengan implementasi sebenarnya
-        if ($nim == 'mahasiswa' && $password == 'password') {
-            // Jika login sukses, set sesi dan redirect ke halaman nilai
-            $this->session->set_userdata('logged_in', true);
-            $this->session->set_userdata('nim', $nim);
-            redirect('mahasiswa');
+        // Implementasi sederhana untuk keperluan uji coba
+        // Gantilah dengan metode otentikasi sesuai sistem sebenarnya
+
+        // For testing purposes, using hardcoded credentials
+        $validNIM = 'mahasiswa';
+        $validPassword = 'password';
+
+        if ($nim == $validNIM && $password == $validPassword) {
+            // Jika login sukses, set sesi dan redirect ke halaman home
+            // Simpan data pengguna ke dalam sesi
+            $userData = [
+                'nim' => $nim,
+                // Data pengguna lainnya...
+            ];
+
+            $session = session();
+            $session->set('logged_in', true);
+            $session->set('user_data', $userData);
+
+            // Redirect ke halaman home
+            return redirect()->to('mahasiswa/home');
         } else {
             // Jika login gagal, tampilkan pesan atau redirect ke halaman login
             echo "Login gagal. Pastikan NIM dan password benar.";
         }
+    }
+
+    public function home() {
+        // Kode untuk tampilan dan verifikasi login
+        return view('mahasiswa/home');
     }
 }

@@ -19,7 +19,8 @@ $routes->get('/', 'Mahasiswa::login'); // Set default route to login
 
 $routes->group('mahasiswa', function ($routes) {
     $routes->add('login', 'Mahasiswa::login');
-    $routes->add('login_process', 'Mahasiswa::login_process');
+    $routes->add('loginProcess', 'Mahasiswa::loginProcess');
     $routes->add('logout', 'Mahasiswa::logout');
     $routes->add('index', 'Mahasiswa::index');
+    $routes->add('home', 'Mahasiswa::home');
 });

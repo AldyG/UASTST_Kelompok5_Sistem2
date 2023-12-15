@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login Mahasiswa</title>
+    <title>Sistem Informasi Akademik (SIA)</title>
     <style>
         body {
             display: flex;
@@ -80,7 +80,7 @@
 <body>
     <div class="login-box">
         <h2>Sistem Informasi Akademik</h2>
-        <form action="<?= site_url('mahasiswa/login_process') ?>" method="post">
+        <form action="<?= site_url('mahasiswa/loginProcess') ?>" method="post">
             <label for="nim">NIM:</label>
             <input type="text" name="nim" required>
             <label for="password">Password:</label>
