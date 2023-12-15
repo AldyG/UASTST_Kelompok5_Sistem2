@@ -11,30 +11,34 @@
             justify-content: center;
             height: 100vh;
             margin: 0;
+            background-color: #00bcd4; /* Changed background color to tosca */
         }
 
         .login-box {
             width: 300px;
             padding: 20px;
-            border: 1px solid #ccc;
+            border: 1px solid #008ba3; /* Darker color for the border */
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
             text-align: center;
+            background-color: #007694; /* Darker color for the background */
         }
 
         .login-box h2 {
             margin-bottom: 20px;
+            color: #90ee90; /* Adjusted text color to white */
         }
 
         .login-box label {
             display: block;
             margin-bottom: 5px;
             font-weight: bold;
+            color: #fff; /* Adjusted text color to white */
         }
 
         .password-container {
             position: relative;
             display: inline-block;
-            width: 100%; /* Set the width to 100% */
+            width: 100%;
             align-items: center;
             justify-content: center;
         }
@@ -57,6 +61,7 @@
             text-align: center;
             align-items: center;
             justify-content: center;
+            color: #000;
         }
 
         .password-toggle::after {
@@ -68,7 +73,7 @@
         }
 
         .login-box button {
-            background-color: #4caf50;
+            background-color: #4caf50; /* Adjusted button color */
             color: white;
             padding: 10px 15px;
             border: none;
@@ -81,9 +86,9 @@
     <div class="login-box">
         <h2>Sistem Informasi Akademik</h2>
         <form action="<?= site_url('mahasiswa/loginProcess') ?>" method="post">
-            <label for="nim">NIM:</label>
+            <label for="nim" style="color: #90ee90">NIM:</label>
             <input type="text" name="nim" required>
-            <label for="password">Password:</label>
+            <label for="password" style="color: #90ee90">Password:</label>
             <div class="password-container">
                 <input type="password" name="password" id="password" required>
                 <span class="password-toggle" onclick="togglePassword()"></span>
