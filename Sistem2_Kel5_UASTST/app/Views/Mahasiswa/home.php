@@ -165,59 +165,137 @@ function convertIndexTo4($param) {
             </tr>
 
             <?php
-            function printRows() {
-                $modelMahasiswa = new \App\Models\ModelMahasiswa();
+                function syncData() {
+                    // Use the CodeIgniter curlrequest service to make a GET request
+                    $client = \Config\Services::curlrequest();
+                    $response = $client->request('GET', 'http://localhost:8080/api/penilaian-dosen', [
+                        'headers' => [
+                            'Accept' => 'application/json',
+                        ]
+                    ]);
 
-                $totalScore = 0;
-                $totalSKS = 0;
+                    // Check if the API request was successful (status code 200)
+                    if ($response->getStatusCode() == 200) {
+                        // Decode the JSON response into an associative array
+                        $data = json_decode($response->getBody(), true);
 
-                $nim = session('user_data')['nim'];
-                $mataKuliah = $modelMahasiswa->getMataKuliahByNIM($nim);
+                        // Get the logged-in user's nim from the session
+                        $nim = session('user_data')['nim'];
 
-                $i = 1;
-                foreach ($mataKuliah as $row) {
-                    $classCode = $row['kode_matkul'];
-                    $className = $row['nama'];
-                    $sks = $row['sks'];
-                    $index = calculateIndex(rand(40, 100));
+                        // Filter $data to include only items where 'nim' matches the session's nim
+                        $filteredData = array_filter($data, function ($item) use ($nim) {
+                            return $item['nim'] == $nim;
+                        });
 
-                    $totalScore += convertIndexTo4($index) * $sks;
-                    $totalSKS += $sks;
-                    
-                    echo "<tr>";
-                    echo "<td>" . $i++ . "</td>";
-                    echo "<td>" . $classCode . "</td>";
-                    echo "<td>" . $className . "</td>";
-                    echo "<td>" . $sks . "</td>";
-                    echo "<td>" . $index . "</td>";
-                    echo "</tr>";
+                        // Return the filtered data
+                        return $filteredData;
+                    }
+
+                    // Return an empty array in case of failure
+                    return [];
                 }
 
-                return ($totalScore / $totalSKS);
-            }
+                $nilai = syncData();
 
-            $IP = printRows();
+                function printRows($nilai) {
+                    $modelMahasiswa = new \App\Models\ModelMahasiswa();
 
-            $IPK = 0;
-            if (session('user_data')['ipk'] != null) {
-                $IPK = session('user_data')['ipk'];
-            }
+                    $totalScore = 0;
+                    $totalSKS = 0;
 
-            echo '<tr class="empty-row">';
-            echo '<td colspan="5"></td>';
-            echo '</tr>';
+                    $mahasiswa = $modelMahasiswa->getMahasiswaByNIM(session('user_data')['nim']);
+                    $currentOverallSKS = $mahasiswa[0]['totalsks'];
+                    $currentTotalIPKScore = $mahasiswa[0]['ipk'] * $currentOverallSKS;
 
-            echo '<tr class="ip-row">';
-            echo '<td colspan="2" style="background: #00bcd4;"></td>';
-            echo '<td colspan="1" style="background: linear-gradient(to right, #ffc107, #ff8c00); font-weight: bold;">IP</td>';
-            echo '<td colspan="2" style="background: linear-gradient(to right, #ffc107, #ff8c00); font-weight: bold;">' . number_format($IP, 2) . '</td>';
-            echo '</tr>';
+                    $nim = session('user_data')['nim'];
+                    $mataKuliah = $modelMahasiswa->getMataKuliahByNIM($nim);
 
-            echo '<tr class="ipk-row">';
-            echo '<td colspan="2" style="background: #00bcd4;"></td>';
-            echo '<td colspan="1" style="background: linear-gradient(to right, #ffc107, #ff8c00); font-weight: bold;">IPK</td>';
-            echo '<td colspan="2" style="background: linear-gradient(to right, #ffc107, #ff8c00); font-weight: bold;">' . number_format($IPK, 2) . '</td>';
-            echo '</tr>';
+                    $i = 1;
+                    foreach ($mataKuliah as $row) {
+                        $classCode = $row['kode_matkul'];
+                        $className = $row['nama'];
+                        $sks = $row['sks'];
+
+                        // Find the corresponding nilai_akhir from $nilai
+                        $matchingNilai = array_filter($nilai, function ($item) use ($classCode) {
+                            return $item['kode'] == $classCode;
+                        });
+
+                        // If a matching entry is found, use its nilai_akhir, otherwise, use a default value
+                        $nilai_akhir = !empty($matchingNilai) ? reset($matchingNilai)['nilai_akhir'] : 0;                        
+                        $index = calculateIndex($nilai_akhir);
+                        
+                        if ($row['pernah_update'] == "no") { // no previous index yet
+                            $currentTotalIPKScore += convertIndexTo4($index) * $sks;
+                            $currentOverallSKS += $sks;
+
+                            $modelMahasiswa->createNewNilaiMatkul($nim, $classCode, $index);
+                            $modelMahasiswa->markUpdated($nim, $classCode, "yes");
+                        } else if ($row['pernah_update'] == "yes") { // has already been updated; need adjustments
+                            $lastIndex = $modelMahasiswa->getIndeksMataKuliah($nim, $classCode);
+                            $currentTotalIPKScore = ($currentTotalIPKScore - ((convertIndexTo4($lastIndex[0]['indeks']) - convertIndexTo4($index)) * $sks));
+
+                            $modelMahasiswa->updateIndeksMatkul($nim, $classCode, $lastIndex[0]['indeks']);
+                        }
+
+                        $totalScore += convertIndexTo4($index) * $sks;
+                        $totalSKS += $sks;
+
+                        echo "<tr>";
+                        echo "<td>" . $i++ . "</td>";
+                        echo "<td>" . $classCode . "</td>";
+                        echo "<td>" . $className . "</td>";
+                        echo "<td>" . $sks . "</td>";
+                        echo "<td>" . $index . "</td>";
+                        echo "</tr>";
+                    }
+                    $IP = $totalScore / $totalSKS;
+                    $IPK = $currentTotalIPKScore / $currentOverallSKS;
+
+                    $modelMahasiswa->updateIPAndIPK($nim, $IP, $IPK, $currentOverallSKS);
+
+                    echo '<tr class="empty-row">';
+                    echo '<td colspan="5"></td>';
+                    echo '</tr>';
+
+                    echo '<tr class="ip-row">';
+                    echo '<td colspan="2" style="background: #00bcd4;"></td>';
+                    echo '<td colspan="1" style="background: linear-gradient(to right, #ffc107, #ff8c00); font-weight: bold;">IP</td>';
+                    echo '<td colspan="2" style="background: linear-gradient(to right, #ffc107, #ff8c00); font-weight: bold;">' . number_format($IP, 2) . '</td>';
+                    echo '</tr>';
+
+                    echo '<tr class="ipk-row">';
+                    echo '<td colspan="2" style="background: #00bcd4;"></td>';
+                    echo '<td colspan="1" style="background: linear-gradient(to right, #ffc107, #ff8c00); font-weight: bold;">IPK</td>';
+                    echo '<td colspan="2" style="background: linear-gradient(to right, #ffc107, #ff8c00); font-weight: bold;">' . number_format($IPK, 2) . '</td>';
+                    echo '</tr>';
+
+                    // return ($totalScore / $totalSKS);
+                }
+
+                printRows($nilai);
+                // $IP = printRows($nilai);
+
+                // $IPK = 0;
+                // if (session('user_data')['ipk'] != null) {
+                //     $IPK = session('user_data')['ipk'];
+                // }
+
+                // echo '<tr class="empty-row">';
+                // echo '<td colspan="5"></td>';
+                // echo '</tr>';
+
+                // echo '<tr class="ip-row">';
+                // echo '<td colspan="2" style="background: #00bcd4;"></td>';
+                // echo '<td colspan="1" style="background: linear-gradient(to right, #ffc107, #ff8c00); font-weight: bold;">IP</td>';
+                // echo '<td colspan="2" style="background: linear-gradient(to right, #ffc107, #ff8c00); font-weight: bold;">' . number_format($IP, 2) . '</td>';
+                // echo '</tr>';
+
+                // echo '<tr class="ipk-row">';
+                // echo '<td colspan="2" style="background: #00bcd4;"></td>';
+                // echo '<td colspan="1" style="background: linear-gradient(to right, #ffc107, #ff8c00); font-weight: bold;">IPK</td>';
+                // echo '<td colspan="2" style="background: linear-gradient(to right, #ffc107, #ff8c00); font-weight: bold;">' . number_format($IPK, 2) . '</td>';
+                // echo '</tr>';
             ?>
 
         </table>
