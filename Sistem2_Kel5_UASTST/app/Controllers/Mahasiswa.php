@@ -81,6 +81,10 @@ class Mahasiswa extends Controller {
     }
 
     public function home() {
+        $session = session();
+        if (!$session->get('user_data')) {
+            return redirect()->to('/mahasiswa/logout');
+        }
         // Kode untuk tampilan dan verifikasi login
         return view('mahasiswa/home');
     }
