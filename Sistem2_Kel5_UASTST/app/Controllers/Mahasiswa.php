@@ -43,9 +43,9 @@ class Mahasiswa extends Controller {
         // Retrieve user input from the login form
         $nim = $this->request->getPost('nim');
         $password = $this->request->getPost('password');
-
+        echo $nim;
         // UNBLOCK WHEN DATABASE DONE
-        $user = $this->modelMahasiswa->getDataByNIM($nim);
+        $user = $this->modelMahasiswa->getMahasiswaByNIM($nim);
 
         // // For testing purposes, using hardcoded credentials
         // $validNIM = '18221000';

@@ -22,5 +22,6 @@ $routes->group('mahasiswa', function ($routes) {
     $routes->add('loginProcess', 'Mahasiswa::loginProcess');
     $routes->add('logout', 'Mahasiswa::logout');
     $routes->add('index', 'Mahasiswa::index');
-    $routes->add('home', 'Mahasiswa::home');
 });
+
+$routes->get('/api/mahasiswa', 'MahasiswaApiController::index'); //api
