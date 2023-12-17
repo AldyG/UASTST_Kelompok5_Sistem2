@@ -16,6 +16,7 @@ $routes->set404Override();
 $routes->setAutoRoute(true);
 
 $routes->get('/', 'Mahasiswa::login'); // Set default route to login
+$routes->get('/api/mahasiswa', 'DaftarMahasiswaController::index');
 
 $routes->group('mahasiswa', function ($routes) {
     $routes->add('login', 'Mahasiswa::login');
